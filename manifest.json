@@ -1,0 +1,28 @@
+{
+    "manifest_version": 3,
+    "name": "Automatizador de Links",
+    "version": "1.0",
+    "description": "Uma extensão para automatizar cliques em links e abrir novas abas.",
+    "permissions": [
+        "activeTab",
+        "scripting",
+        "storage"
+    ],
+    "host_permissions": [
+        "https://play.easyfrench.fm/*",
+        "https://*/*"
+    ],
+    "action": {
+        "default_popup": "popup.html",
+        "default_icon": {
+            "16": "icon16.png",
+            "48": "icon48.png",
+            "128": "icon128.png"
+        }
+    },
+    "icons": {
+        "16": "icon16.png",
+        "48": "icon48.png",
+        "128": "icon128.png"
+    }
+}
