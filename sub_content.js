@@ -1,10 +1,11 @@
-// Este script é injetado nas abas secundárias abertas pelo content.js
+// Este script é injetado nas abas secundárias abertas pelo background.js
 
-(async () => { // Usando IIFE assíncrona
+(async () => {
     'use strict';
 
     console.log("Sub-content script (secundário) iniciado na nova aba.");
 
+    //const textosDesejados = ["PDF"];
     const textosDesejados = ["HTML", "text file with semicolons"];
     const linksParaAbrir = [];
     const delayEntreAbasSecundarias = 1000; // 1 segundo de atraso entre as aberturas internas
@@ -14,11 +15,12 @@
     const todosOsLinksQualificados = document.querySelectorAll('a[rel="nofollow noopener"]');
 
     if (todosOsLinksQualificados.length === 0) {
-        console.warn("Sub-script: Nenhum link com rel='nofollow noopener' encontrado nesta página.");
+        console.warn("Sub-script: Nenhum link com rel=nofollow noopener encontrado nesta página.");
         if (fecharAbaAposConclusao) {
             setTimeout(() => window.close(), 2000); // Fecha mesmo se não encontrar nada
         }
-        return;
+        //return; estava dando erro no terminal..
+        window.close(); // fechar ao inves de return
     }
 
     for (const link of todosOsLinksQualificados) {

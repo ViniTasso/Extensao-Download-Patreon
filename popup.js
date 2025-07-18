@@ -3,29 +3,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusDiv = document.getElementById('status');
 
     startButton.addEventListener('click', () => {
-        statusDiv.textContent = "Iniciando automação...";
-        // Desabilita o botão para evitar cliques múltiplos
+        statusDiv.textContent = "Iniciando automacao...";
         startButton.disabled = true;
 
-        // Injeta o content.js na aba ativa
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            statusDiv.textContent = "Reconhecendo Aba";
             const currentTab = tabs[0];
+            statusDiv.textContent = "Selecionanado Aba...";
             if (currentTab) {
-                // Injeta o content.js na aba atual.
-                // O content.js será o seu "script principal".
-                chrome.scripting.executeScript({
-                    target: { tabId: currentTab.id },
-                    files: ['content.js']
-                }, () => {
-                    if (chrome.runtime.lastError) {
-                        statusDiv.textContent = `Erro ao injetar script: ${chrome.runtime.lastError.message}`;
-                        console.error(`Erro ao injetar content.js: ${chrome.runtime.lastError.message}`);
-                        startButton.disabled = false; // Reabilita se houver erro
-                    } else {
-                        statusDiv.textContent = "Script principal injetado. Verifique o console da página.";
-                        // O script content.js será executado na página principal
-                        // e se encarregará de abrir as novas abas e gerenciar o fluxo.
-                        // Não precisamos reabilitar o botão aqui, pois o processo é contínuo.
+                statusDiv.textContent = "Preparando ambiente";
+                // Envia uma mensagem para o background.js para iniciar a automação
+                chrome.runtime.sendMessage({
+                    action: "startAutomation",
+                    tabId: currentTab.id, // ID da aba principal
+                    tabUrl: currentTab.url // URL da aba principal
+                }, (response) => {
+                    if (response && response.status === "started") {
+                        statusDiv.textContent = "Automacao iniciada. Verifique o console da pagina principal e as novas abas.";
+                        // O background.js cuidará de reabilitar o botão ou de reiniciar o processo.
+                        // Aqui, apenas informamos que a automação começou.
+                    } else if (response && response.status === "error") {
+                        statusDiv.textContent = `Erro: ${response.message}`;
+                        console.error(`Erro ao iniciar automação: ${response.message}`);
+                        startButton.disabled = false;
                     }
                 });
             } else {
@@ -35,10 +35,24 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Opcional: Para resetar o status ao abrir o popup
+    // Opcional: Para resetar o status ao abrir o popup (após uma automação completa)
     chrome.storage.local.get(['processingComplete'], (result) => {
         if (result.processingComplete) {
-            statusDiv.textContent = "Automação concluída na sessão anterior.";
+            statusDiv.textContent = "Automacao concluída na sessão anterior. Clique para reiniciar.";
+            startButton.disabled = false;
+        } else {
+            statusDiv.textContent = "Aguardando inicio...";
+            startButton.disabled = false; // Garante que o botão esteja habilitado na primeira abertura
+        }
+    });
+
+    // Ouve mensagens do background.js para atualizar o status no popup
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        if (message.action === "updatePopupStatus") {
+            statusDiv.textContent = message.status;
+            if (message.status === "Processo concluido!" || message.status.includes("Erro")) {
+                startButton.disabled = false; // Reabilita o botão ao final
+            }
         }
     });
 });
